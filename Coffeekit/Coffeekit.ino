@@ -15,12 +15,16 @@ const int midiNotes[NCHANNELS] =
   42, // F#3, Closed hi-hat
   46, // A#3. Open hi-hat
 };
-const int thresholdLevel[NCHANNELS] = { 100, 100, 100, 100 }; // ADC reading to trigger; lower => more sensitive
-const long int maxLevel[NCHANNELS] = { 400, 400, 400, 400 }; // ADC reading for full velocity; lower => more sensitive
+const int DEFAULT_THRESHOLD = 300;
+const int thresholdLevel[NCHANNELS] = { DEFAULT_THRESHOLD, DEFAULT_THRESHOLD, DEFAULT_THRESHOLD, DEFAULT_THRESHOLD }; // ADC reading to trigger; lower => more sensitive
+const int DEFAULT_MAX = 1024;
+const long int maxLevel[NCHANNELS] = { DEFAULT_MAX, DEFAULT_MAX, DEFAULT_MAX, DEFAULT_MAX }; // ADC reading for full velocity; lower => more sensitive
 
 static unsigned int vmax[NCHANNELS] = { 0 };
 static unsigned int trigLevel[NCHANNELS];
 static unsigned int counter[NCHANNELS] = { 0 };
+
+static unsigned long triggerTime[NCHANNELS] = {0};
 
 static unsigned int CTR_NOTEON = 10; // Roughly 5ms sampling peak voltage
 static unsigned int CTR_NOTEOFF = CTR_NOTEON + 30; // Duration roughly 15ms 
@@ -55,6 +59,7 @@ void setup() {
 void loop() {
   int ch;
   for (ch=0; ch < NCHANNELS; ch++)
+//  for (ch=0; ch < 1; ch++)
   {
     unsigned int v = analogRead(inPins[ch]);
     
@@ -64,6 +69,7 @@ void loop() {
       {
         vmax[ch] = v;
         counter[ch] = 1;
+//        triggerTimes[ch] = System.
 //        digitalWrite(statusPin, HIGH);
         
       }
@@ -73,6 +79,7 @@ void loop() {
       if ( v > vmax[ch] )
         vmax[ch] = v;
       counter[ch]++;
+
       
       if ( counter[ch] == CTR_NOTEON )
       {
