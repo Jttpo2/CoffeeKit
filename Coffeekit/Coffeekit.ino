@@ -1,14 +1,9 @@
+#include <MIDIUSB.h>
+
 // This code is placed in the public domain by its author, Ian Harvey
 // October 2016.
 
-// For Pro Micro / Leonardo
-//#define MIDI_SERIAL Serial1
-
-static void MIDI_setup();
-static void MIDI_noteOn(int ch, int note, int velocity);
-static void MIDI_noteOff(int ch, int note);
-
-const int MIDI_CHANNEL=1;
+const int MIDI_CHANNEL=0;
 
 const int NCHANNELS = 4;
 const int inPins[NCHANNELS] = { A0, A1, A2, A3 };
@@ -37,14 +32,14 @@ static unsigned int CTR_NOTEOFF = CTR_NOTEON + 30; // Duration roughly 15ms
 const unsigned int TRIGGER_DECAY = 20;
 
 
-static int statusPin = 2;
+//static int statusPin = 2;
 
 void setup() {
   // put your setup code here, to run once:
 //  Serial.begin(115200);
   analogReference(DEFAULT);
-  pinMode(statusPin, OUTPUT);
-  digitalWrite(statusPin, LOW);
+//  pinMode(statusPin, OUTPUT);
+//  digitalWrite(statusPin, LOW);
   
   for (int i = 0; i < NCHANNELS; i++)
   {
@@ -53,7 +48,7 @@ void setup() {
     trigLevel[i] = thresholdLevel[i];
   }
 
-//  MIDI_setup();
+  MIDI_setup();
 }
 
 
@@ -69,7 +64,7 @@ void loop() {
       {
         vmax[ch] = v;
         counter[ch] = 1;
-        digitalWrite(statusPin, HIGH);
+//        digitalWrite(statusPin, HIGH);
         
       }
     }
@@ -86,17 +81,21 @@ void loop() {
         // TODO: Map measured values to 1-127
         if (vel < 5) vel = 5;
         if (vel > 127) vel = 127;
-        Serial.println(vel);
+//        Serial.println(vel);
 //        MIDI_noteOn(MIDI_CHANNEL, midiNotes[ch], vel);
+        noteOn(MIDI_CHANNEL, midiNotes[ch], 64);
         trigLevel[ch] = vmax[ch];
       }
       else if ( counter[ch] >= CTR_NOTEOFF )
       {
 //        MIDI_noteOff(MIDI_CHANNEL, midiNotes[ch]);
+        noteOff(MIDI_CHANNEL, midiNotes[ch], 64);
         counter[ch] = 0;
-        digitalWrite(statusPin, LOW);
+//        digitalWrite(statusPin, LOW);
       }
     }
+
+    MidiUSB.flush();
 
     // The signal from the piezo is a damped oscillation decaying with
     // time constant 8-10ms. Prevent false retriggering by raising 
@@ -108,8 +107,41 @@ void loop() {
 }
 
 // MIDI Code
-//
+
 // See https://www.midi.org/specifications/item/table-1-summary-of-midi-message
+
+
+// First parameter is the event type (0x09 = note on, 0x08 = note off).
+// Second parameter is note-on/note-off, combined with the channel.
+// Channel can be anything between 0-15. Typically reported to the user as 1-16.
+// Third parameter is the note number (48 = middle C).
+// Fourth parameter is the velocity (64 = normal, 127 = fastest).
+
+void noteOn(byte channel, byte pitch, byte velocity) {
+  midiEventPacket_t noteOn = {0x09, 0x90 | channel, pitch, velocity};
+  MidiUSB.sendMIDI(noteOn);
+}
+
+void noteOff(byte channel, byte pitch, byte velocity) {
+  midiEventPacket_t noteOff = {0x08, 0x80 | channel, pitch, velocity};
+  MidiUSB.sendMIDI(noteOff);
+}
+
+
+void MIDI_setup() {
+  Serial.begin(115200);
+}
+
+
+// First parameter is the event type (0x0B = control change).
+// Second parameter is the event type, combined with the channel.
+// Third parameter is the control number number (0-119).
+// Fourth parameter is the control value (0-127).
+
+void controlChange(byte channel, byte control, byte value) {
+  midiEventPacket_t event = {0x0B, 0xB0 | channel, control, value};
+  MidiUSB.sendMIDI(event);
+}
 
 //void MIDI_setup()
 //{
@@ -129,4 +161,5 @@ void loop() {
 //  MIDI_SERIAL.write( note & 0x7F );
 //  MIDI_SERIAL.write( 0x01 );
 //}
+
 
