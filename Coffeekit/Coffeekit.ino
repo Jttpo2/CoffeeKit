@@ -92,13 +92,14 @@ void loop() {
         if (vel > 127) vel = 127;
 //        Serial.println(vel);
 //        MIDI_noteOn(MIDI_CHANNEL, midiNotes[ch], vel);
-        noteOn(MIDI_CHANNEL, midiNotes[ch], 64);
+        noteOn(MIDI_CHANNEL, midiNotes[ch], vel);
         trigLevel[ch] = vmax[ch];
       }
       else if ( counter[ch] >= CTR_NOTEOFF )
       {
 //        MIDI_noteOff(MIDI_CHANNEL, midiNotes[ch]);
-        noteOff(MIDI_CHANNEL, midiNotes[ch], 64);
+        int fakeVelocity = 64; // Need to feed the note off function with a velocity for some reason
+        noteOff(MIDI_CHANNEL, midiNotes[ch], fakeVelocity);
         counter[ch] = 0;
 //        digitalWrite(statusPin, LOW);
       }
@@ -129,13 +130,13 @@ void loop() {
 void noteOn(byte channel, byte pitch, byte velocity) {
   midiEventPacket_t noteOn = {0x09, 0x90 | channel, pitch, velocity};
   MidiUSB.sendMIDI(noteOn);
-  Serial.println(pitch);
+//  Serial.println(pitch);
 }
 
 void noteOff(byte channel, byte pitch, byte velocity) {
   midiEventPacket_t noteOff = {0x08, 0x80 | channel, pitch, velocity};
   MidiUSB.sendMIDI(noteOff);
-  Serial.println("Off ");
+//  Serial.println("Off ");
 }
 
 
