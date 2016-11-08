@@ -15,7 +15,9 @@ const int midiNotes[NCHANNELS] =
   42, // F#3, Closed hi-hat
   46, // A#3. Open hi-hat
 };
-const int DEFAULT_THRESHOLD = 300;
+
+// On table: 1000, stuck to paper cup: 40
+const int DEFAULT_THRESHOLD = 50;
 const int thresholdLevel[NCHANNELS] = { DEFAULT_THRESHOLD, DEFAULT_THRESHOLD, DEFAULT_THRESHOLD, DEFAULT_THRESHOLD }; // ADC reading to trigger; lower => more sensitive
 const int DEFAULT_MAX = 1024;
 const long int maxLevel[NCHANNELS] = { DEFAULT_MAX, DEFAULT_MAX, DEFAULT_MAX, DEFAULT_MAX }; // ADC reading for full velocity; lower => more sensitive
@@ -127,11 +129,13 @@ void loop() {
 void noteOn(byte channel, byte pitch, byte velocity) {
   midiEventPacket_t noteOn = {0x09, 0x90 | channel, pitch, velocity};
   MidiUSB.sendMIDI(noteOn);
+  Serial.println(pitch);
 }
 
 void noteOff(byte channel, byte pitch, byte velocity) {
   midiEventPacket_t noteOff = {0x08, 0x80 | channel, pitch, velocity};
   MidiUSB.sendMIDI(noteOff);
+  Serial.println("Off ");
 }
 
 
