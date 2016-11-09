@@ -6,22 +6,42 @@
 const int MIDI_CHANNEL=0;
 
 const int NCHANNELS = 4;
-const int inPins[NCHANNELS] = { A0, A1, A2, A3 };
+const int inPins[NCHANNELS] = { A0, A1, A2, A3};// A4, A5 };
 const int midiNotes[NCHANNELS] = 
 {
   // Follows General MIDI specs at https://www.midi.org/specifications/item/gm-level-1-sound-set
   36, // C3, Kick
   38, // D3, Snare
   42, // F#3, Closed hi-hat
-  46, // A#3. Open hi-hat
+  48 // A#3. Open hi-hat
+//  48, // ?
+//  56  // ?
 };
 
 // On table: 1000, stuck to paper cup: 40
 const int DEFAULT_THRESHOLD = 50;
-const int thresholdLevel[NCHANNELS] = { DEFAULT_THRESHOLD, DEFAULT_THRESHOLD, DEFAULT_THRESHOLD, DEFAULT_THRESHOLD }; // ADC reading to trigger; lower => more sensitive
+const int thresholdLevel[NCHANNELS] = 
+{ 
+  // ADC reading to trigger; lower => more sensitive
+  DEFAULT_THRESHOLD, // Channel 0
+  DEFAULT_THRESHOLD, // Channel 1
+  DEFAULT_THRESHOLD, // Channel 2
+  DEFAULT_THRESHOLD // Channel 3
+//  DEFAULT_THRESHOLD, // Channel 4
+//  10  // Channel 5, larger diaphragm less sensitive
+}; 
 const int DEFAULT_MAX = 1024;
-const long int maxLevel[NCHANNELS] = { DEFAULT_MAX, DEFAULT_MAX, DEFAULT_MAX, DEFAULT_MAX }; // ADC reading for full velocity; lower => more sensitive
-
+// Set weaker mics to lower max levels
+const long int maxLevel[NCHANNELS] = 
+{ 
+  // ADC reading for full velocity; lower => more sensitive
+  DEFAULT_MAX, 
+  DEFAULT_MAX, 
+  500, 
+  DEFAULT_MAX
+//  DEFAULT_MAX,
+//  500 // Larger diaphragm less sensititve 
+}; 
 static unsigned int vmax[NCHANNELS] = { 0 };
 static unsigned int trigLevel[NCHANNELS];
 static unsigned int counter[NCHANNELS] = { 0 };
@@ -36,7 +56,6 @@ static unsigned int CTR_NOTEOFF = CTR_NOTEON + 30; // Duration roughly 15ms
 
 // Decaying the trigger value over several samples to prevent false retriggering
 const unsigned int TRIGGER_DECAY = 20;
-
 
 //static int statusPin = 2;
 
