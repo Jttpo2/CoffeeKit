@@ -10,6 +10,14 @@ SoftwareSerial mySerial(2, 3); // RX, TX
 // Made by John Petersson, based on example code stolen from various places
 // Thanks to Ian Harvey for code base
 
+enum midiConnection {
+  USB,
+  SHIELD
+}
+
+// Set which midi connection to use
+currentMidiConnection = SHIELD;
+
 const int MIDI_CHANNEL=0; // Use default MIDI channel
 
 const int NCHANNELS = 4; // Number of connected "pads"
@@ -126,24 +134,34 @@ void loop() {
     // threshold over several future samples.
     trigLevel[ch] = ((trigLevel[ch] * (TRIGGER_DECAY - 1)) + (thresholdLevel[ch] * 1)) / TRIGGER_DECAY;
   }
-
 }
 
 void MIDISetup() {
-//  usbMIDISetup();
-  midiShieldSetup();
+  switch (currentMidiConnection) {
+    case USB: usbMIDISetup();
+      break;
+    case SHIELD: midiShieldSetup();
+      break;
+  }  
 }
 
 void noteOn(byte channel, byte pitch, byte velocity) {
-//  midiUSBNoteOn(channel, pitch, velocity);
-  midiShieldNoteOn(channel, pitch, velocity);
+  switch (currentMidiConnection) {
+    case USB: midiUSBNoteOn(channel, pitch, velocity);
+      break;
+    case SHIELD: midiShieldNoteOn(channel, pitch, velocity);
+      break;
+  }  
 }
 
 void noteOff(byte channel, byte pitch, byte velocity) {
-//  midiUSBNoteOff(channel, pitch, velocity);
-  midiShieldNoteOff(channel, pitch, velocity);
+switch (currentMidiConnection) {
+    case USB: midiUSBNoteOff(channel, pitch, velocity);
+      break;
+    case SHIELD: midiShieldNoteOff(channel, pitch, velocity);
+      break;
+  }  
 }
-
 
 // ******************************************************
 // MIDI USB Code
