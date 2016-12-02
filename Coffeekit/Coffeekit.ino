@@ -26,7 +26,7 @@ const int midiNotes[NCHANNELS] =
 {
   // Follows General MIDI specs at https://www.midi.org/specifications/item/gm-level-1-sound-set
   36, // C3, Kick
-  38, // D3, Snare
+  40, // Electric Snare
   42, // F#3, Closed hi-hat
   47, // ?
   65, // High timbale
@@ -55,7 +55,7 @@ const long int maxLevel[NCHANNELS] =
   DEFAULT_MAX, 
   DEFAULT_MAX, 
   DEFAULT_MAX,
-  100, // Larger diaphragm less sensititve 
+  500, // Larger diaphragm less sensititve 
   DEFAULT_MAX
 
 }; 
