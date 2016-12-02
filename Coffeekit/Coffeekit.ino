@@ -2,6 +2,10 @@
 
 #define LED_PIN 13
 
+// Midi controller using piezo mics and software midi link
+// Made by John Petersson, based on example code stolen from various places
+// Thanks to Ian Harvey for code base
+
 const int MIDI_CHANNEL=0; // Use default MIDI channel
 
 const int NCHANNELS = 4; // Number of connected "pads"
@@ -171,5 +175,5 @@ void turnLEDOff() {
 
 
 
-// Thanks to Ian Harvey for code base
+
 
