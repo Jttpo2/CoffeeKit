@@ -1,10 +1,22 @@
 #include <MIDIUSB.h>
+#include <SoftwareSerial.h>
 
 #define LED_PIN 13
+#define resetMIDI 4 // Tied to VS1053 (Sound module on instrument shield) Reset line
+
+SoftwareSerial mySerial(2, 3); // RX, TX
 
 // Midi controller using piezo mics and software midi link
 // Made by John Petersson, based on example code stolen from various places
 // Thanks to Ian Harvey for code base
+
+enum midiConnection {
+  USB,
+  SHIELD
+}
+
+// Set which midi connection to use
+currentMidiConnection = SHIELD;
 
 const int MIDI_CHANNEL=0; // Use default MIDI channel
 
@@ -72,7 +84,7 @@ void setup() {
     trigLevel[i] = thresholdLevel[i];
   }
 
-  MIDI_setup();
+  MIDISetup();
 }
 
 
@@ -122,11 +134,38 @@ void loop() {
     // threshold over several future samples.
     trigLevel[ch] = ((trigLevel[ch] * (TRIGGER_DECAY - 1)) + (thresholdLevel[ch] * 1)) / TRIGGER_DECAY;
   }
-
 }
 
-// MIDI Code
+void MIDISetup() {
+  switch (currentMidiConnection) {
+    case USB: usbMIDISetup();
+      break;
+    case SHIELD: midiShieldSetup();
+      break;
+  }  
+}
 
+void noteOn(byte channel, byte pitch, byte velocity) {
+  switch (currentMidiConnection) {
+    case USB: midiUSBNoteOn(channel, pitch, velocity);
+      break;
+    case SHIELD: midiShieldNoteOn(channel, pitch, velocity);
+      break;
+  }  
+}
+
+void noteOff(byte channel, byte pitch, byte velocity) {
+switch (currentMidiConnection) {
+    case USB: midiUSBNoteOff(channel, pitch, velocity);
+      break;
+    case SHIELD: midiShieldNoteOff(channel, pitch, velocity);
+      break;
+  }  
+}
+
+// ******************************************************
+// MIDI USB Code
+// ******************************************************
 // See https://www.midi.org/specifications/item/table-1-summary-of-midi-message
 
 // First parameter is the event type (0x09 = note on, 0x08 = note off).
@@ -135,14 +174,14 @@ void loop() {
 // Third parameter is the note number (48 = middle C).
 // Fourth parameter is the velocity (64 = normal, 127 = fastest).
 
-void noteOn(byte channel, byte pitch, byte velocity) {
+void midiUSBNoteOn(byte channel, byte pitch, byte velocity) {
   midiEventPacket_t noteOn = {0x09, 0x90 | channel, pitch, velocity};
   MidiUSB.sendMIDI(noteOn);
 //  Serial.println(pitch);
   turnLEDOn();
 }
 
-void noteOff(byte channel, byte pitch, byte velocity) {
+void midiUSBNoteOff(byte channel, byte pitch, byte velocity) {
   midiEventPacket_t noteOff = {0x08, 0x80 | channel, pitch, velocity};
   MidiUSB.sendMIDI(noteOff);
 //  Serial.println("Off ");
@@ -150,7 +189,7 @@ void noteOff(byte channel, byte pitch, byte velocity) {
 }
 
 
-void MIDI_setup() {
+void usbMIDISetup() {
   Serial.begin(115200);
 }
 
@@ -160,7 +199,7 @@ void MIDI_setup() {
 // Third parameter is the control number number (0-119).
 // Fourth parameter is the control value (0-127).
 
-void controlChange(byte channel, byte control, byte value) {
+void midiUSBControlChange(byte channel, byte control, byte value) {
   midiEventPacket_t event = {0x0B, 0xB0 | channel, control, value};
   MidiUSB.sendMIDI(event);
 }
@@ -173,6 +212,52 @@ void turnLEDOff() {
   digitalWrite(LED_PIN, LOW);
 }
 
+// ****************************************************
+// Sparkfun Instrument Shield
+// ****************************************************
+void midiShieldSetup() {
+  // Setup soft serial for MIDI control
+  mySerial.begin(31250);
+  
+  // Reset the VS1053
+  pinMode(resetMIDI, OUTPUT);
+  digitalWrite(resetMIDI, LOW);
+  delay(100);
+  digitalWrite(resetMIDI, HIGH);
+  delay(100);
+  talkMIDI(0xB0, 0x07, 120); // 0xB0 is channel message, set channel volume to near max (127)
+
+  talkMIDI(0xB0, 0, 0x78); // Bank select drums
+  int instrument = 0; // For the drum bank, instrument number does not matter. Needs to be set, though
+  talkMIDI(0xC0, 0, 0); // Set instrument number. 0xC0 is a 1 data byte command
+}
+
+//Send a MIDI note-on message.  Like pressing a piano key
+//channel ranges from 0-15
+void midiShieldNoteOn(byte channel, byte note, byte attack_velocity) {
+  talkMIDI( (0x90 | channel), note, attack_velocity);
+}
+
+//Send a MIDI note-off message.  Like releasing a piano key
+void midiShieldNoteOff(byte channel, byte note, byte release_velocity) {
+  talkMIDI( (0x80 | channel), note, release_velocity);
+}
+
+//Plays a MIDI note. Doesn't check to see that cmd is greater than 127, or that data values are less than 127
+void talkMIDI(byte cmd, byte data1, byte data2) {
+//  digitalWrite(ledPin, HIGH);
+  mySerial.write(cmd);
+  mySerial.write(data1);
+
+  //Some commands only have one data byte. All cmds less than 0xBn have 2 data bytes 
+  //(sort of: http://253.ccarh.org/handout/midiprotocol/)
+  if( (cmd & 0xF0) <= 0xB0)
+    mySerial.write(data2);
+
+//  digitalWrite(ledPin, LOW);
+}
+
+// *****************************************************************
 
 
 
