@@ -20,17 +20,17 @@ currentMidiConnection = SHIELD;
 
 const int MIDI_CHANNEL=0; // Use default MIDI channel
 
-const int NCHANNELS = 4; // Number of connected "pads"
-const int inPins[NCHANNELS] = { A0, A1, A2, A3};// A4, A5 }; // Analog inputs of pads
+const int NCHANNELS = 6; // Number of connected "pads". Might need to be set to one more than ectually exists to get rid of "double sounds" - the signal somehow spills over and makes one of the pads activate two or more sounds 
+const int inPins[NCHANNELS] = { A0, A1, A2, A3, A4, A5 }; // Analog inputs of pads
 const int midiNotes[NCHANNELS] = 
 {
   // Follows General MIDI specs at https://www.midi.org/specifications/item/gm-level-1-sound-set
   36, // C3, Kick
-  38, // D3, Snare
+  40, // Electric Snare
   42, // F#3, Closed hi-hat
-  48 // A#3. Open hi-hat
-//  48, // ?
-//  56  // ?
+  47, // ?
+  65, // High timbale
+  56  // Cowbell
 };
 
 // On table: 1000, stuck to paper cup: 40
@@ -41,9 +41,10 @@ const int thresholdLevel[NCHANNELS] =
   DEFAULT_THRESHOLD, // Channel 0
   DEFAULT_THRESHOLD, // Channel 1
   DEFAULT_THRESHOLD, // Channel 2
-  DEFAULT_THRESHOLD // Channel 3
-//  DEFAULT_THRESHOLD, // Channel 4
-//  10  // Channel 5, larger diaphragm less sensitive
+  DEFAULT_THRESHOLD, // Channel 3
+    20,  // Channel 4, larger diaphragm less sensitive
+  DEFAULT_THRESHOLD, // Channel 5
+
 }; 
 const int DEFAULT_MAX = 1024; // Default maximum Piezo value
 // Set weaker mics to lower max levels
@@ -52,10 +53,11 @@ const long int maxLevel[NCHANNELS] =
   // ADC reading for full velocity; lower => more sensitive
   DEFAULT_MAX, 
   DEFAULT_MAX, 
-  500, 
+  DEFAULT_MAX, 
+  DEFAULT_MAX,
+  500, // Larger diaphragm less sensititve 
   DEFAULT_MAX
-//  DEFAULT_MAX,
-//  500 // Larger diaphragm less sensititve 
+
 }; 
 static unsigned int vmax[NCHANNELS] = { 0 };
 static unsigned int trigLevel[NCHANNELS];
