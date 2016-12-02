@@ -2,10 +2,10 @@
 
 #define LED_PIN 13
 
-const int MIDI_CHANNEL=0;
+const int MIDI_CHANNEL=0; // Use default MIDI channel
 
-const int NCHANNELS = 4;
-const int inPins[NCHANNELS] = { A0, A1, A2, A3};// A4, A5 };
+const int NCHANNELS = 4; // Number of connected "pads"
+const int inPins[NCHANNELS] = { A0, A1, A2, A3};// A4, A5 }; // Analog inputs of pads
 const int midiNotes[NCHANNELS] = 
 {
   // Follows General MIDI specs at https://www.midi.org/specifications/item/gm-level-1-sound-set
@@ -18,7 +18,7 @@ const int midiNotes[NCHANNELS] =
 };
 
 // On table: 1000, stuck to paper cup: 40
-const int DEFAULT_THRESHOLD = 50;
+const int DEFAULT_THRESHOLD = 50; // Default Piezo trigger treshold
 const int thresholdLevel[NCHANNELS] = 
 { 
   // ADC reading to trigger; lower => more sensitive
@@ -29,7 +29,7 @@ const int thresholdLevel[NCHANNELS] =
 //  DEFAULT_THRESHOLD, // Channel 4
 //  10  // Channel 5, larger diaphragm less sensitive
 }; 
-const int DEFAULT_MAX = 1024;
+const int DEFAULT_MAX = 1024; // Default maximum Piezo value
 // Set weaker mics to lower max levels
 const long int maxLevel[NCHANNELS] = 
 { 
@@ -56,15 +56,10 @@ static unsigned int CTR_NOTEOFF = CTR_NOTEON + 30; // Duration roughly 15ms
 // Decaying the trigger value over several samples to prevent false retriggering
 const unsigned int TRIGGER_DECAY = 20;
 
-//static int statusPin = 2;
-
 void setup() {
-  pinMode(LED_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT); // Init LED pin
   
-//  Serial.begin(115200);
   analogReference(DEFAULT);
-//  pinMode(statusPin, OUTPUT);
-//  digitalWrite(statusPin, LOW);
   
   for (int i = 0; i < NCHANNELS; i++)
   {
@@ -80,7 +75,6 @@ void setup() {
 void loop() {
   int ch;
   for (ch=0; ch < NCHANNELS; ch++)
-//  for (ch=0; ch < 1; ch++)
   {
     unsigned int v = analogRead(inPins[ch]);
     
@@ -90,9 +84,6 @@ void loop() {
       {
         vmax[ch] = v;
         counter[ch] = 1;
-//        triggerTimes[ch] = System.
-//        digitalWrite(statusPin, HIGH);
-        
       }
     }
     else
@@ -101,7 +92,6 @@ void loop() {
         vmax[ch] = v;
       counter[ch]++;
 
-      
       if ( counter[ch] == CTR_NOTEON )
       {
         long int vel = ((long int)vmax[ch]*127)/maxLevel[ch];
@@ -109,20 +99,14 @@ void loop() {
         // TODO: Map measured values to 1-127
         if (vel < 5) vel = 5;
         if (vel > 127) vel = 127;
-//        Serial.println(vel);
-//        MIDI_noteOn(MIDI_CHANNEL, midiNotes[ch], vel);
         noteOn(MIDI_CHANNEL, midiNotes[ch], vel);
-        turnLEDOn();
         trigLevel[ch] = vmax[ch];
       }
       else if ( counter[ch] >= CTR_NOTEOFF )
       {
-//        MIDI_noteOff(MIDI_CHANNEL, midiNotes[ch]);
-        int fakeVelocity = 64; // Need to feed the note off function with a velocity for some reason
-        noteOff(MIDI_CHANNEL, midiNotes[ch], fakeVelocity);
-        turnLEDOff();
+        int releaseVelocity = 64; // Use default release velocity
+        noteOff(MIDI_CHANNEL, midiNotes[ch], releaseVelocity);
         counter[ch] = 0;
-//        digitalWrite(statusPin, LOW);
       }
     }
 
@@ -141,7 +125,6 @@ void loop() {
 
 // See https://www.midi.org/specifications/item/table-1-summary-of-midi-message
 
-
 // First parameter is the event type (0x09 = note on, 0x08 = note off).
 // Second parameter is note-on/note-off, combined with the channel.
 // Channel can be anything between 0-15. Typically reported to the user as 1-16.
@@ -152,12 +135,14 @@ void noteOn(byte channel, byte pitch, byte velocity) {
   midiEventPacket_t noteOn = {0x09, 0x90 | channel, pitch, velocity};
   MidiUSB.sendMIDI(noteOn);
 //  Serial.println(pitch);
+  turnLEDOn();
 }
 
 void noteOff(byte channel, byte pitch, byte velocity) {
   midiEventPacket_t noteOff = {0x08, 0x80 | channel, pitch, velocity};
   MidiUSB.sendMIDI(noteOff);
 //  Serial.println("Off ");
+  turnLEDOff();
 }
 
 
@@ -183,27 +168,6 @@ void turnLEDOn() {
 void turnLEDOff() {
   digitalWrite(LED_PIN, LOW);
 }
-
-//void MIDI_setup()
-//{
-//  MIDI_SERIAL.begin(31250);
-//}
-//
-//void MIDI_noteOn(int ch, int note, int velocity)
-//{
-//  MIDI_SERIAL.write( 0x90+((ch-1) & 0xF) );
-//  MIDI_SERIAL.write( note & 0x7F );
-//  MIDI_SERIAL.write( velocity & 0x7F );
-//}
-//
-//void MIDI_noteOff(int ch, int note)
-//{
-//  MIDI_SERIAL.write( 0x80+((ch-1) & 0xF) );
-//  MIDI_SERIAL.write( note & 0x7F );
-//  MIDI_SERIAL.write( 0x01 );
-//}
-
-
 
 
 
