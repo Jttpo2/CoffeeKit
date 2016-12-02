@@ -1,7 +1,6 @@
 #include <MIDIUSB.h>
 
-// This code is placed in the public domain by its author, Ian Harvey
-// October 2016.
+#define LED_PIN 13
 
 const int MIDI_CHANNEL=0;
 
@@ -60,7 +59,8 @@ const unsigned int TRIGGER_DECAY = 20;
 //static int statusPin = 2;
 
 void setup() {
-  // put your setup code here, to run once:
+  pinMode(LED_PIN, OUTPUT);
+  
 //  Serial.begin(115200);
   analogReference(DEFAULT);
 //  pinMode(statusPin, OUTPUT);
@@ -112,6 +112,7 @@ void loop() {
 //        Serial.println(vel);
 //        MIDI_noteOn(MIDI_CHANNEL, midiNotes[ch], vel);
         noteOn(MIDI_CHANNEL, midiNotes[ch], vel);
+        turnLEDOn();
         trigLevel[ch] = vmax[ch];
       }
       else if ( counter[ch] >= CTR_NOTEOFF )
@@ -119,6 +120,7 @@ void loop() {
 //        MIDI_noteOff(MIDI_CHANNEL, midiNotes[ch]);
         int fakeVelocity = 64; // Need to feed the note off function with a velocity for some reason
         noteOff(MIDI_CHANNEL, midiNotes[ch], fakeVelocity);
+        turnLEDOff();
         counter[ch] = 0;
 //        digitalWrite(statusPin, LOW);
       }
@@ -174,6 +176,14 @@ void controlChange(byte channel, byte control, byte value) {
   MidiUSB.sendMIDI(event);
 }
 
+void turnLEDOn() {
+  digitalWrite(LED_PIN, HIGH);
+}
+
+void turnLEDOff() {
+  digitalWrite(LED_PIN, LOW);
+}
+
 //void MIDI_setup()
 //{
 //  MIDI_SERIAL.begin(31250);
@@ -193,4 +203,9 @@ void controlChange(byte channel, byte control, byte value) {
 //  MIDI_SERIAL.write( 0x01 );
 //}
 
+
+
+
+
+// Thanks to Ian Harvey for code base
 
