@@ -30,11 +30,11 @@ const int midiNotes[NCHANNELS] =
 {
   // Follows General MIDI specs at https://www.midi.org/specifications/item/gm-level-1-sound-set
   36, // C3, Kick
-  40, // Electric Snare
+  47, // Low tom
   42, // F#3, Closed hi-hat
-  47, // ?
+  56, // Cowbell
   65, // High timbale
-  56  // Cowbell
+  40  // Electric Snare
 };
 
 // On table: 1000, stuck to paper cup: 40
