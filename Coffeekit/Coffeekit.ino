@@ -4,6 +4,9 @@
 #define LED_PIN 13
 #define resetMIDI 4 // Tied to VS1053 (Sound module on instrument shield) Reset line
 
+// Develpment mode - verbose printout
+const bool devMode = true;
+
 SoftwareSerial mySerial(2, 3); // RX, TX
 
 // Midi controller using piezo mics and software midi link
@@ -15,8 +18,9 @@ enum midiConnection {
   SHIELD
 }
 
-// Set which midi connection to use
+// Set which midi connection to use (both at same time introduces lag)
 currentMidiConnection = SHIELD;
+//currentMidiConnection = USB;
 
 const int MIDI_CHANNEL=0; // Use default MIDI channel
 
@@ -78,14 +82,8 @@ void setup() {
   pinMode(LED_PIN, OUTPUT); // Init LED pin
   
   analogReference(DEFAULT);
-  
-  for (int i = 0; i < NCHANNELS; i++)
-  {
-    pinMode(inPins[i], INPUT);
-    analogRead(inPins[i]);
-    trigLevel[i] = thresholdLevel[i];
-  }
 
+  inputSetup();
   MIDISetup();
 }
 
@@ -138,6 +136,14 @@ void loop() {
   }
 }
 
+void inputSetup() {
+  for (int i = 0; i < NCHANNELS; i++) {
+    pinMode(inPins[i], INPUT);
+    analogRead(inPins[i]);
+    trigLevel[i] = thresholdLevel[i];
+  }
+}
+
 void MIDISetup() {
   switch (currentMidiConnection) {
     case USB: usbMIDISetup();
@@ -179,14 +185,14 @@ switch (currentMidiConnection) {
 void midiUSBNoteOn(byte channel, byte pitch, byte velocity) {
   midiEventPacket_t noteOn = {0x09, 0x90 | channel, pitch, velocity};
   MidiUSB.sendMIDI(noteOn);
-//  Serial.println(pitch);
+  if (devMode) Serial.println(pitch);
   turnLEDOn();
 }
 
 void midiUSBNoteOff(byte channel, byte pitch, byte velocity) {
   midiEventPacket_t noteOff = {0x08, 0x80 | channel, pitch, velocity};
   MidiUSB.sendMIDI(noteOff);
-//  Serial.println("Off ");
+  if (devMode) Serial.println("Off ");
   turnLEDOff();
 }
 
